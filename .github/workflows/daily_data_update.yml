@@ -1,4 +1,4 @@
-name: Automated Macro Data Fetcher
+name: Automate Shipping Financial Data Fetch
 
 on:
   schedule:
@@ -7,6 +7,10 @@ on:
     # Run 2: 08:00 PM UTC (Brent/ZIM update only)
     - cron: '0 20 * * *'
   workflow_dispatch: # Allows you to trigger it manually from GitHub UI anytime
+
+# Grants write permission explicitly inside the file as a backup
+permissions:
+  contents: write
 
 jobs:
   update-data:
@@ -18,8 +22,8 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-numeric: '3.10'
-        cache: 'pip' # Speeds up subsequent runs
+        python-version: '3.10' # Fixed the "python-numeric" typo here
+        cache: 'pip'
 
     - name: Install dependencies
       run: |
