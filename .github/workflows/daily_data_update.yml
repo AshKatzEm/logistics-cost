@@ -6,7 +6,6 @@ on:
     - cron: '0 4,12,20 * * *'
   workflow_dispatch:
 
-# Grants write permission explicitly inside the file as a backup
 permissions:
   contents: write
 
@@ -15,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6 # Upgraded to v6 for Node 24 support
+      uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v6 # Upgraded to v6 for Node 24 support
+      uses: actions/setup-python@v6
       with:
         python-version: '3.10'
         cache: 'pip'
@@ -28,27 +27,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run Full Fetch (04:00 UTC Run)
-        if: github.event.schedule == '0 4 * * *' || github.event_name == 'workflow_dispatch'
-        run: python data_fetcher.py
-
-    - name: Run Brent-Only Fetch (12:00 & 20:00 UTC Run)
-      if: github.event.schedule == '0 12,20 * * *'
-      run: python data_fetcher.py --brent-only
-
-    - name: Run Full Fetch (08:00 UTC Run)
-      if: github.event.schedule == '0 8 * * *' || github.event_name == 'workflow_dispatch'
+    - name: Run Data Fetch
+      # Runs for every scheduled time or manual trigger
       run: python data_fetcher.py
-
-    - name: Run Brent-Only Fetch (20:00 UTC Run)
-      if: github.event.schedule == '0 20 * * *'
-      run: python data_fetcher.py --brent-only
 
     - name: Commit and Push Changes
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add shipping_macro_data.csv
-        # Only commit if there are actual changes to prevent workflow errors
         git diff-index --quiet HEAD || git commit -m "Automated data update: $(date -u +'%Y-%m-%d %H:%M') UTC"
         git push
