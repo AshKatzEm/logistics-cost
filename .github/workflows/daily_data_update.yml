@@ -2,11 +2,9 @@ name: Automate Shipping Financial Data Fetch
 
 on:
   schedule:
-    # Run 1: 08:00 AM UTC (Full update: Brent + BDI + Exchange Rates)
-    - cron: '0 8 * * *'
-    # Run 2: 08:00 PM UTC (Brent/ZIM update only)
-    - cron: '0 20 * * *'
-  workflow_dispatch: # Allows you to trigger it manually from GitHub UI anytime
+    # Run at 04:00, 12:00, and 20:00 UTC
+    - cron: '0 4,12,20 * * *'
+  workflow_dispatch:
 
 # Grants write permission explicitly inside the file as a backup
 permissions:
@@ -29,6 +27,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+
+    - name: Run Full Fetch (04:00 UTC Run)
+        if: github.event.schedule == '0 4 * * *' || github.event_name == 'workflow_dispatch'
+        run: python data_fetcher.py
+
+    - name: Run Brent-Only Fetch (12:00 & 20:00 UTC Run)
+      if: github.event.schedule == '0 12,20 * * *'
+      run: python data_fetcher.py --brent-only
 
     - name: Run Full Fetch (08:00 UTC Run)
       if: github.event.schedule == '0 8 * * *' || github.event_name == 'workflow_dispatch'
