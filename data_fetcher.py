@@ -37,6 +37,15 @@ def fetch_market_data():
         return {t: None for t in tickers}
 
 def main():
+    prices, basket_df = fetch_market_data()
+    usd_ils, eur_ils = fetch_exchange_rates()
+    
+    # Validation: If key data is missing (e.g., too many None values), abort
+    if prices.get('BZ=F') is None:
+        print("Data fetch failed. Skipping this update to preserve CSV integrity.")
+        return 
+    
+    # ... rest of your code ...
     # 1. Fetch current data
     prices = fetch_market_data()
     usd_ils, eur_ils = fetch_exchange_rates()
