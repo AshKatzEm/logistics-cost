@@ -2,8 +2,8 @@ name: Automate Shipping Financial Data Fetch
 
 on:
   schedule:
-    # Run at 04:00, 12:00, and 20:00 UTC
-    - cron: '0 4,12,20 * * *'
+    # 14:30 and 19:30 UTC
+    - cron: '30 14,19 * * *'
   workflow_dispatch:
 
 permissions:
