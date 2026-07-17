@@ -2,9 +2,7 @@ import os
 import requests
 import yfinance as yf
 import pandas as pd
-import numpy as np
 from datetime import datetime
-import argparse
 
 # Define the local file name
 CSV_FILE = 'shipping_macro_data.csv'
@@ -25,7 +23,6 @@ def fetch_exchange_rates():
 
 def fetch_market_data():
     """Fetches market prices via yfinance."""
-    # BZ=F: Brent, BDRY: Dry Bulk, others: Shipping stocks
     tickers = ["BZ=F", "BDRY", "ZIM", "MATX", "SBLK", "FRO", "STNG"]
     try:
         data = yf.download(tickers, period="1d", progress=False)
@@ -37,21 +34,17 @@ def fetch_market_data():
         return {t: None for t in tickers}
 
 def main():
-    prices, basket_df = fetch_market_data()
-    usd_ils, eur_ils = fetch_exchange_rates()
-    
-    # Validation: If key data is missing (e.g., too many None values), abort
-    if prices.get('BZ=F') is None:
-        print("Data fetch failed. Skipping this update to preserve CSV integrity.")
-        return 
-    
-    # ... rest of your code ...
-    # 1. Fetch current data
+    # 1. Fetch data
     prices = fetch_market_data()
     usd_ils, eur_ils = fetch_exchange_rates()
     today = datetime.now().strftime('%Y-%m-%d %H:%M')
     
-    # 2. Build row
+    # 2. Validation: If key data is missing, abort to preserve CSV integrity
+    if prices.get('BZ=F') is None:
+        print("Data fetch failed. Skipping this update to preserve CSV integrity.")
+        return 
+    
+    # 3. Build row
     new_data = {
         'Date': today,
         'USD_ILS': usd_ils,
@@ -65,12 +58,14 @@ def main():
         'STNG': prices.get('STNG')
     }
     
-    # 3. Append to CSV
+    # 4. Append to CSV
     df_new = pd.DataFrame([new_data])
+    
     if not os.path.exists(CSV_FILE) or os.stat(CSV_FILE).st_size == 0:
         df_new.to_csv(CSV_FILE, index=False)
     else:
-        df_existing = pd.read_csv(CSV_FILE)
+        # Use on_bad_lines='skip' to ensure we don't crash on corrupted rows
+        df_existing = pd.read_csv(CSV_FILE, on_bad_lines='skip')
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
         df_combined.to_csv(CSV_FILE, index=False)
     
