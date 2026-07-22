@@ -1,5 +1,7 @@
-requests
-yfinance
-pandas
-numpy
-beautifulsoup4
+streamlit>=1.60.0
+pandas>=2.2.3
+plotly>=5.24.1
+yfinance>=0.2.0
+pyarrow>=24.0.0
+altair>=6.2.2
+pydeck>=0.9.3
