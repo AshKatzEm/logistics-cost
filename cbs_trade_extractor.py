@@ -95,7 +95,7 @@ def forward_fill_year(series: pd.Series) -> pd.Series:
 # ------------------------------------------------------------------
 
 # for each file which has "ta2" in the name
-# drop all excel rows 1-19
+# Claude dropped rows with roman numeral I think.
 # drop all rows 33 - 77
 # now there should be 13 columns
 # FTB Import Returned (-)
@@ -135,13 +135,21 @@ def extract_ta2(path: str) -> pd.DataFrame:
     period_col, year_col = 11, 12
     df[year_col] = forward_fill_year(df[year_col])
 
-    drop = excel_rows_to_drop((1, 19), (33, 77))
-    keep = df.drop(index=[i for i in drop if i < len(df)])
+    def is_single_roman(v) -> bool:
+        return isinstance(v, str) and v.strip() in ROMAN_TO_NUM
+
+    keep = df[df[period_col].apply(is_single_roman)]
 
     out = keep[[c for c in range(11)]].copy()
     out.columns = [slugify(c) for c in TA2_COLUMNS]
-    out["Month"] = keep[period_col].apply(lambda r: NUM_TO_MONTH_NAME[ROMAN_TO_NUM[r.strip()]])
+    out["Month"] = keep[period_col].apply(lambda r: NUM_TO_MONTH_NAME[ROMAN_TO_NUM[r.strip()]]).values
     out["Year"] = keep[year_col].astype(float).astype(int).values
+
+    # The sheet repeats each month across three blocks: Original data,
+    # Seasonally adjusted data, and Trend data - all using the same roman
+    # numeral labels. Only the first (Original data) block has the true
+    # source values; keep just that occurrence of each Month/Year.
+    out = out.drop_duplicates(subset=["Month", "Year"], keep="first").reset_index(drop=True)
     return out
 
 
@@ -149,7 +157,7 @@ def extract_ta2(path: str) -> pd.DataFrame:
 # TA3 - Exports by category
 # ------------------------------------------------------------------
 # for each file which has "ta3" in the name
-# drop all excel rows 1-20
+# Claude dropped rows with roman numeral I think.
 # drop all rows 34 - 77
 # now there should be 13 columns
 # FTB Export Returned (-)
@@ -165,8 +173,6 @@ def extract_ta2(path: str) -> pd.DataFrame:
 
 
 # each row of these columns will be exported to our dataframe. Make sure the column names have "_" isnstead of " "
-
-
 
 TA3_COLUMNS = [
     "FTB Export Returned (-)",
@@ -186,14 +192,22 @@ def extract_ta3(path: str) -> pd.DataFrame:
     period_col, year_col = 8, 9
     df[year_col] = forward_fill_year(df[year_col])
 
-    drop = excel_rows_to_drop((1, 20), (34, 77))
-    keep = df.drop(index=[i for i in drop if i < len(df)])
+    def is_single_roman(v) -> bool:
+        return isinstance(v, str) and v.strip() in ROMAN_TO_NUM
+
+    keep = df[df[period_col].apply(is_single_roman)]
 
     out = keep[[c for c in range(8)]].copy()
     out.columns = [slugify(c) for c in TA3_COLUMNS]
-    out["Month"] = keep[period_col].apply(lambda r: NUM_TO_MONTH_NAME[ROMAN_TO_NUM[r.strip()]])
+    out["Month"] = keep[period_col].apply(lambda r: NUM_TO_MONTH_NAME[ROMAN_TO_NUM[r.strip()]]).values
     out["Year"] = keep[year_col].astype(float).astype(int).values
+
+    # Same repeated-block issue as ta2 - keep only the first (Original
+    # data) occurrence of each Month/Year.
+    out = out.drop_duplicates(subset=["Month", "Year"], keep="first").reset_index(drop=True)
     return out
+
+
 
 # for each file which has "te4" in the name
 # if it has 7 columns:
@@ -315,6 +329,7 @@ Other Countries Export,
 Unclassified Export,
 """
 # So we're generating only one row of data from this file, and it will have all of the above columns and one row of values for those columns. Make sure the column names have "_" isnstead of " " 
+
 
 def extract_td1(path: str) -> pd.DataFrame:
     """
