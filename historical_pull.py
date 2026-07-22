@@ -55,6 +55,6 @@ expected_cols = [
 df = df.reindex(columns=expected_cols)
 
 # 8. Save to CSV
-df.to_csv('shipping_macro_data.csv', index=False)
+df.to_csv('shipping_ticker_data.csv', index=False)
 
 print("Historical data rebuilt with full column set (including exchange rates).")

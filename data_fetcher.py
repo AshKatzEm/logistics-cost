@@ -4,7 +4,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 
-CSV_FILE = 'shipping_macro_data.csv'
+CSV_FILE = 'shipping_ticker_data.csv'
 
 def fetch_exchange_rates():
     try:
